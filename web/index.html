@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Plants - Web Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 2px solid #333;
+            background: #000;
+        }
+        
+        #gameCanvas {
+            display: block;
+            cursor: crosshair;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            text-align: right;
+        }
+        
+        #shop, #inventory, #help {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2a4a2a;
+            border: 2px solid #4a6a4a;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #aaa;
+        }
+        
+        .close-btn:hover {
+            color: white;
+        }
+        
+        .notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        button {
+            background: #4a6a4a;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #5a7a5a;
+        }
+        
+        button:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1024" height="768"></canvas>
+        
+        <!-- Game UI -->
+        <div id="ui">
+            <div id="money">Money: $100</div>
+            <div id="day">Day: 1</div>
+            <div id="weather">Weather: Sunny</div>
+            <div id="selected">Seed: Carrot | Tool: Watering Can</div>
+        </div>
+        
+        <!-- Controls Help -->
+        <div id="controls">
+            <div>WASD: Move</div>
+            <div>Space: Interact</div>
+            <div>E: Shop</div>
+            <div>Q: Inventory</div>
+            <div>H: Help</div>
+            <div>ESC: Close</div>
+        </div>
+        
+        <!-- Shop Interface -->
+        <div id="shop">
+            <div class="close-btn" onclick="closeShop()">×</div>
+            <h2>🌱 SHOP</h2>
+            <div id="shopContent"></div>
+        </div>
+        
+        <!-- Inventory Interface -->
+        <div id="inventory">
+            <div class="close-btn" onclick="closeInventory()">×</div>
+            <h2>🎒 INVENTORY</h2>
+            <div id="inventoryContent"></div>
+        </div>
+        
+        <!-- Help Interface -->
+        <div id="help">
+            <div class="close-btn" onclick="closeHelp()">×</div>
+            <h2>❓ HELP & CONTROLS</h2>
+            <div id="helpContent"></div>
+        </div>
+        
+        <!-- Notifications -->
+        <div id="notification" class="notification"></div>
+    </div>
+
+    <script src="js/constants.js"></script>
+    <script src="js/plant.js"></script>
+    <script src="js/garden.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/economy.js"></script>
+    <script src="js/shop.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
