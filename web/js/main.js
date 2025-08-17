@@ -3,47 +3,80 @@ let game, renderer, canvas;
 let lastTime = 0;
 let running = true;
 
+// Debug function
+function debugLog(message) {
+    console.log(`[DEBUG] ${message}`);
+}
+
 // UI functions
 function closeShop() {
-    game.showShop = false;
+    if (game && game.showShop !== undefined) {
+        game.showShop = false;
+    }
 }
 
 function closeInventory() {
-    game.showInventory = false;
+    if (game && game.showInventory !== undefined) {
+        game.showInventory = false;
+    }
 }
 
 function closeHelp() {
-    game.showHelp = false;
+    if (game && game.showHelp !== undefined) {
+        game.showHelp = false;
+    }
 }
 
 function updateUI() {
-    // Update money display
-    document.getElementById('money').textContent = `Money: $${game.economy.money}`;
-    
-    // Update day display
-    document.getElementById('day').textContent = `Day: ${game.day}`;
-    
-    // Update weather display
-    document.getElementById('weather').textContent = `Weather: ${game.weather.charAt(0).toUpperCase() + game.weather.slice(1)}`;
-    
-    // Update selected items
-    const selectedSeed = game.player.getSelectedSeed();
-    const selectedTool = game.player.getSelectedTool();
-    document.getElementById('selected').textContent = `Seed: ${selectedSeed.charAt(0).toUpperCase() + selectedSeed.slice(1)} | Tool: ${selectedTool.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
-    
-    // Update shop content
-    if (game.showShop) {
-        updateShopUI();
-    }
-    
-    // Update inventory content
-    if (game.showInventory) {
-        updateInventoryUI();
-    }
-    
-    // Update help content
-    if (game.showHelp) {
-        updateHelpUI();
+    try {
+        // Check if game is initialized
+        if (!game || !game.economy) {
+            debugLog('Game not fully initialized yet');
+            return;
+        }
+        
+        // Update money display
+        const moneyElement = document.getElementById('money');
+        if (moneyElement) {
+            moneyElement.textContent = `Money: $${game.economy.money}`;
+        }
+        
+        // Update day display
+        const dayElement = document.getElementById('day');
+        if (dayElement) {
+            dayElement.textContent = `Day: ${game.day}`;
+        }
+        
+        // Update weather display
+        const weatherElement = document.getElementById('weather');
+        if (weatherElement) {
+            weatherElement.textContent = `Weather: ${game.weather.charAt(0).toUpperCase() + game.weather.slice(1)}`;
+        }
+        
+        // Update selected items
+        const selectedElement = document.getElementById('selected');
+        if (selectedElement && game.player) {
+            const selectedSeed = game.player.getSelectedSeed();
+            const selectedTool = game.player.getSelectedTool();
+            selectedElement.textContent = `Seed: ${selectedSeed.charAt(0).toUpperCase() + selectedSeed.slice(1)} | Tool: ${selectedTool.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
+        }
+        
+        // Update shop content
+        if (game.showShop) {
+            updateShopUI();
+        }
+        
+        // Update inventory content
+        if (game.showInventory) {
+            updateInventoryUI();
+        }
+        
+        // Update help content
+        if (game.showHelp) {
+            updateHelpUI();
+        }
+    } catch (error) {
+        console.error('Error in updateUI:', error);
     }
 }
 
@@ -165,47 +198,71 @@ function selectTool(toolName) {
 function gameLoop(currentTime) {
     if (!running) return;
     
-    const deltaTime = (currentTime - lastTime) / 1000.0;
-    lastTime = currentTime;
-    
-    // Update game
-    if (game.currentState === STATE_PLAYING) {
-        game.update(deltaTime);
-        game.updatePlayerMovement(deltaTime);
-    }
-    
-    // Update UI
-    updateUI();
-    
-    // Render
-    renderer.clear();
-    
-    if (game.currentState === STATE_PAUSED) {
-        renderer.renderPauseScreen();
-    } else if (game.showShop) {
-        renderer.renderShop(game.shop, game.economy);
-    } else if (game.showInventory) {
-        renderer.renderInventory(game.player);
-    } else if (game.showHelp) {
-        renderer.renderHelp();
-    } else {
-        // Render main game
-        renderer.renderGarden(game.garden);
+    try {
+        const deltaTime = (currentTime - lastTime) / 1000.0;
+        lastTime = currentTime;
         
-        // Render plants
-        for (const plant of game.garden.plants.values()) {
-            renderer.renderPlant(plant);
+        // Check if game is initialized
+        if (!game || !game.currentState) {
+            debugLog('Game not initialized, skipping update');
+            requestAnimationFrame(gameLoop);
+            return;
         }
         
-        // Render player
-        renderer.renderPlayer(game.player);
+        // Update game
+        if (game.currentState === STATE_PLAYING) {
+            game.update(deltaTime);
+            if (game.updatePlayerMovement) {
+                game.updatePlayerMovement(deltaTime);
+            }
+        }
+        
+        // Update UI
+        updateUI();
+        
+        // Render
+        if (renderer) {
+            renderer.clear();
+            
+            if (game.currentState === STATE_PAUSED) {
+                renderer.renderPauseScreen();
+            } else if (game.showShop) {
+                renderer.renderShop(game.shop, game.economy);
+            } else if (game.showInventory) {
+                renderer.renderInventory(game.player);
+            } else if (game.showHelp) {
+                renderer.renderHelp();
+            } else {
+                // Render main game
+                renderer.renderGarden(game.garden);
+                
+                // Render plants
+                if (game.garden && game.garden.plants) {
+                    for (const plant of game.garden.plants.values()) {
+                        renderer.renderPlant(plant);
+                    }
+                }
+                
+                // Render player
+                if (game.player) {
+                    renderer.renderPlayer(game.player);
+                }
+            }
+            
+            // Render notifications
+            if (game.notifications) {
+                renderer.renderNotifications(game.notifications);
+            }
+        }
+        
+        // Continue loop
+        requestAnimationFrame(gameLoop);
+        
+    } catch (error) {
+        console.error('Error in game loop:', error);
+        // Continue the loop even if there's an error
+        requestAnimationFrame(gameLoop);
     }
-    
-    // Render notifications
-    renderer.renderNotifications(game.notifications);
-    
-    // Continue loop
-    requestAnimationFrame(gameLoop);
 }
 
 // Input handling
@@ -234,25 +291,58 @@ function handleMouseUp(event) {
 
 // Initialize game
 function initGame() {
-    // Get canvas
-    canvas = document.getElementById('gameCanvas');
-    
-    // Create game and renderer
-    game = new Game();
-    renderer = new Renderer(canvas);
-    
-    // Set up event listeners
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    
-    // Prevent context menu on right click
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-    
-    // Start game loop
-    requestAnimationFrame(gameLoop);
+    try {
+        debugLog('Starting game initialization...');
+        
+        // Get canvas
+        canvas = document.getElementById('gameCanvas');
+        if (!canvas) {
+            throw new Error('Canvas element not found');
+        }
+        debugLog('Canvas found');
+        
+        // Create game and renderer
+        game = new Game();
+        if (!game) {
+            throw new Error('Failed to create game instance');
+        }
+        debugLog('Game instance created');
+        
+        renderer = new Renderer(canvas);
+        if (!renderer) {
+            throw new Error('Failed to create renderer instance');
+        }
+        debugLog('Renderer instance created');
+        
+        // Set up event listeners
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        
+        // Prevent context menu on right click
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        debugLog('Event listeners set up');
+        
+        // Start game loop
+        requestAnimationFrame(gameLoop);
+        debugLog('Game loop started');
+        
+    } catch (error) {
+        console.error('Error initializing game:', error);
+        // Show error on page
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ff0000; color: white; padding: 20px; border-radius: 10px; z-index: 10000;';
+        errorDiv.innerHTML = `
+            <h2>Game Error</h2>
+            <p>${error.message}</p>
+            <p>Check console for details</p>
+            <button onclick="location.reload()">Reload Page</button>
+        `;
+        document.body.appendChild(errorDiv);
+    }
 }
 
 // Start the game when page loads
