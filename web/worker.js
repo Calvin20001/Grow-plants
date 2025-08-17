@@ -5,23 +5,38 @@ export default {
       const url = new URL(request.url);
       const path = url.pathname;
       
-      // Default to index.html for root path
+      // Handle root path - serve index.html
       if (path === '/' || path === '') {
-        return env.ASSETS.fetch(new Request(`${url.origin}/index.html`, request));
+        const indexRequest = new Request(`${url.origin}/index.html`, request);
+        return env.ASSETS.fetch(indexRequest);
       }
       
       // Try to serve the requested file
-      const response = await env.ASSETS.fetch(request);
-      
-      // If file not found, return index.html for SPA routing
-      if (response.status === 404) {
-        return env.ASSETS.fetch(new Request(`${url.origin}/index.html`, request));
+      try {
+        const response = await env.ASSETS.fetch(request);
+        
+        // If file not found (404), serve index.html for SPA routing
+        if (response.status === 404) {
+          const indexRequest = new Request(`${url.origin}/index.html`, request);
+          return env.ASSETS.fetch(indexRequest);
+        }
+        
+        return response;
+      } catch (fetchError) {
+        // If fetch fails, serve index.html
+        const indexRequest = new Request(`${url.origin}/index.html`, request);
+        return env.ASSETS.fetch(indexRequest);
       }
       
-      return response;
     } catch (error) {
-      // Fallback to index.html on any error
-      return env.ASSETS.fetch(new Request(`${request.url.split('/')[0]}//${request.url.split('/')[2]}/index.html`, request));
+      // Ultimate fallback - return a simple error page
+      return new Response('Game loading... Please refresh the page.', {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-cache'
+        }
+      });
     }
   }
 };
